@@ -1,6 +1,5 @@
- <?php
-
-namespace App\Http\Requests;
+<?php
+namespace App\Http\Requests; // <--- Sekarang ini ada di baris 2, tepat setelah <?php
 
 use Illuminate\Foundation\Http\FormRequest;
 
