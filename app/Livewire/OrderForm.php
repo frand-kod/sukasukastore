@@ -106,6 +106,41 @@ class OrderForm extends Component
         $this->totalDiscountAmount = 0;
     }
 
+    public function rules()
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'quantity' => 'required|integer|min:1|max:' . $this->shoe->stock,
+        ];
+    }
+
+    protected function gatherBookingData(array $validatedData): array
+    {
+        return [
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'grand_total_amount' => $this->grandTotalAmount,
+            'sub_total_amount' => $this->subTotalAmount,
+            'total_discount_amount' => $this->totalDiscountAmount,
+            'discount' => $this->discount,
+            'promo_code' => $this->promoCode,
+            'promo_code_id' => $this->promoCodeId,
+            'quantity' => $this->quantity,
+        ];
+    }
+
+    public function submit()
+    {
+        $validatedData = $this->validate();
+
+        $bookingData = $this->gatherBookingData($validatedData);
+
+        $this->orderService->updateCustomerData($bookingData);
+
+        return redirect()->route('front.customer_data');
+    }
+
     public function render()
     {
         return view('livewire.order-form');

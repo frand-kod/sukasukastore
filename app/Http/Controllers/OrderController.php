@@ -38,7 +38,8 @@ class OrderController extends Controller
 
     public function customerData()
     {
-        $data = $this->orderSevice ->getOrderDetails();
+        $data = $this->orderService ->getOrderDetails();
+        dd($data);
         return view('order.customer_data', $data);
     }
 
