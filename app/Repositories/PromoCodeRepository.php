@@ -7,23 +7,12 @@ use App\Repositories\Contracts\PromoCodeRepositoryInterface;
 
 class PromoCodeRepository implements PromoCodeRepositoryInterface
 {
-    /**
-     * Retrieves all promo codes, ordered by their creation date (latest first).
-     *
-     * @return \Illuminate\Database\Eloquent\Collection A collection of PromoCode models.
-     */
-    public function getAllPromoCode()
+    public function getAllPromoCode() // Ini akan cocok dengan interface baru
     {
         return PromoCode::latest()->get();
     }
 
-    /**
-     * Finds a single promo code by its unique code string.
-     *
-     * @param string $code The promo code string to search for.
-     * @return \App\Models\PromoCode|null The PromoCode model instance or null if not found.
-     */
-    public function findByCode(string $code)
+    public function findByCode(string $code) // Ini akan cocok dengan interface baru
     {
         return PromoCode::where('code', $code)->first();
     }

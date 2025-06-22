@@ -73,6 +73,7 @@
                 <div class="flex flex-col gap-3 px-4">
                     <h2 class="font-bold">Choose Size</h2>
                     <div class="flex items-center flex-wrap gap-[10px]">
+
                         @foreach ($shoe->sizes as $itemSize)
                         <label class="relative flex justify-center min-w-[83px] w-fit rounded-2xl ring-1 ring-[#2A2A2A] p-[14px] transition-all duration-300 has-[:checked]:bg-white has-[:checked]:ring-2 has-[:checked]:ring-[#FFC700] hover:ring-2 hover:ring-[#FFC700]">
                             <input type="radio" data-size-id="{{$itemSize->id}}"  value="{{$itemSize ->size}}" name="shoe_size" value="EU 40" class="absolute top-1/2 left-1/2 opacity-0" required>

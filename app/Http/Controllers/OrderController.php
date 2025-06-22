@@ -31,8 +31,8 @@ class OrderController extends Controller
 
     public function booking()
     {
-        $data = $this ->orderSevice ->getOrderDetails();
-        dd($data);
+        $data = $this ->orderService ->getOrderDetails();
+        //dd($data);
         return view('order.order', $data);
     }
 

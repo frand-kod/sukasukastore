@@ -4,7 +4,9 @@ namespace App\Repositories\Contracts;
 
 interface PromoCodeRepositoryInterface
 {
-    public function getAllPromoCodes();
+    // PERHATIKAN: HILANGKAN 's' dari 'Codes' di sini
+    public function getAllPromoCode();
 
-    public function findByode (string $code);
+    // PERHATIKAN: UBAH 'o' menjadi 'C' kapital di sini
+    public function findByCode(string $code);
 }
