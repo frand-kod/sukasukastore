@@ -40,6 +40,11 @@ class OrderService
         $this->orderRepository->saveToSession($orderData);
     }
 
+    public function getMyOrderDetails(array $validated)
+    {
+        return $this->orderRepository->findByTrxIdAndPhoneNumber($validated['booking_trx_id'], $validated['phone']);
+    }
+
     public function getOrderDetails()
     {
         // 1. Ambil data pesanan dari sesi
@@ -67,6 +72,8 @@ class OrderService
         $orderData['sub_total_amount'] = $subTotalAmount;
         $orderData['total_tax'] = $totalTax;
         $orderData['grand_total_amount'] = $grandTotalAmount;
+
+        session()->put('orderData', $orderData);
 
         // 9. Kembalikan data pesanan dan objek sepatu
         return compact('orderData', 'shoe');
@@ -110,61 +117,81 @@ class OrderService
         $this->orderRepository->updateSessionData($data);
     }
 
-    public function paymentConfirm(array $validated) // <-- Nama fungsi tidak sesuai dengan isinya!
-    {
+   // Lokasi: app/Services/OrderService.php
+// Lokasi: app/Services/OrderService.php
 
-        $orderData = $this->orderRepository->getOrderDataFromSession();
+public function paymentConfirm(array $validated)
+{
+    // Langkah 1: Mengambil data dari session
+    // Pastikan OrderRepository->getOrderDataFromSession() mengambil dari session('orderData')
+    $orderData = $this->orderRepository->getOrderDataFromSession();
+    $productTransactionId = null;
 
-        $productTransactionId = null; // Inisialisasi variabel untuk ID transaksi baru
-
-        try {
-            // DB::transaction untuk memastikan semua operasi (DB dan file) bersifat atomik
-            DB::transaction(function () use ($validated, &$productTransactionId, $orderData) { // <-- MASALAH UTAMA: $validated dan $orderData tidak terdefinisi di sini atau di scope luar!
-
-                // Logic untuk upload bukti pembayaran (proof)
-                if (isset($validated['proof'])) {
-                    // Asumsi $validated['proof'] adalah instance UploadedFile
-                    $proofPath = $validated['proof']->store('proofs', 'public'); // Simpan file ke storage
-                    $validated['proof'] = $proofPath; // Ganti objek file dengan path-nya
-                }
-
-                // Menggabungkan data pesanan dari sesi ($orderData) ke array $validated
-                // Ini terlihat seperti persiapan data untuk disimpan sebagai ProductTransaction
-                $validated['name'] = $orderData['name'];
-                $validated['email'] = $orderData['email'];
-                $validated['phone'] = $orderData['phone'];
-                $validated['address'] = $orderData['address'];
-                $validated['post_code'] = $orderData['post_code'];
-                $validated['city'] = $orderData['city'];
-                $validated['quantity'] = $orderData['quantity'];
-                $validated['sub_total_amount'] = $orderData['sub_total_amount'];
-                $validated['grand_total_amount'] = $orderData['grand_total_amount'];
-                $validated['discount_amount'] = $orderData['total_discount_amount']; // Perhatikan nama kunci 'total_discount_amount' vs 'discount_amount'
-                $validated['promo_code_id'] = $orderData['promo_code_id'];
-                $validated['shoe_id'] = $orderData['shoe_id'];
-                $validated['shoe_size'] = $orderData['shoe_size'];
-                $validated['size_id'] = $orderData['size_id'];
-
-                $validated['is_paid'] = false; // Menandai transaksi sebagai belum lunas
-                $validated['booking_trx_id'] = ProductTransaction::generateUniqueTrxId(); // Generate ID transaksi unik
-
-                // Menyimpan transaksi baru ke database melalui OrderRepository
-                $newTransaction = $this->orderRepository->createTransaction($validated);
-
-                // Mengambil ID transaksi yang baru dibuat dan menyimpannya ke variabel luar
-                $productTransactionId = $newTransaction->id;
-
-            }); // End of DB::transaction closure
-
-        } catch (\Exception $e) {
-            // Menangani error jika ada masalah selama proses transaksi
-            Log::error('Error in payment confirmation: ' . $e->getMessage()); // Log error
-            session()->flash('error', $e->getMessage()); // Tampilkan pesan error ke pengguna
-            return null; // Kembalikan null jika terjadi error
-        }
-
-        // Kembalikan ID transaksi jika proses sukses
-        return $productTransactionId;
+    // Langkah 2: Memastikan data session ada sebelum melanjutkan
+    if (!$orderData) {
+        throw new \Exception("Sesi pesanan tidak ditemukan. Mohon ulangi proses dari awal.");
     }
 
+    // Variabel ini akan kita isi nanti, untuk debugging jika terjadi error
+    $dataToSave = [];
+
+    try {
+        DB::transaction(function () use ($validated, &$productTransactionId, $orderData, &$dataToSave) {
+
+            // Langkah 3: Menyiapkan data yang akan disimpan, dimulai dari data form
+            $dataToSave = $validated;
+
+            if (isset($dataToSave['proof'])) {
+                $dataToSave['proof'] = $dataToSave['proof']->store('proofs', 'public');
+            }
+
+            // Langkah 4: Menggabungkan data dari session ke array $dataToSave
+            // STRUKTUR INI DISESUAIKAN DENGAN SCREENSHOT DD() TERAKHIR ANDA
+
+            // Data Customer (tanpa sub-array 'customer')
+            $dataToSave['name'] = $orderData['name'];
+            $dataToSave['email'] = $orderData['email'];
+            $dataToSave['phone'] = $orderData['phone'];
+            $dataToSave['address'] = $orderData['address'];
+            $dataToSave['post_code'] = $orderData['post_code'];
+            $dataToSave['city'] = $orderData['city'];
+
+            // Data Pesanan
+            $dataToSave['quantity'] = $orderData['quantity'];
+            $dataToSave['sub_total_amount'] = $orderData['sub_total_amount'];
+            $dataToSave['grand_total_amount'] = $orderData['grand_total_amount'];
+
+            // Menggunakan ?? untuk keamanan jika key tidak ada
+            $dataToSave['discount_amount'] = $orderData['total_discount_amount'] ?? $orderData['discount'] ?? 0;
+            $dataToSave['promo_code_id'] = $orderData['promo_code_id'] ?? null;
+
+            // Data Sepatu
+            $dataToSave['shoe_id'] = $orderData['shoe_id'];
+            $dataToSave['shoe_size'] = $orderData['shoe_size'];
+            $dataToSave['size_id'] = $orderData['size_id'];
+
+            // Data Tambahan
+            $dataToSave['is_paid'] = false;
+            $dataToSave['booking_trx_id'] = ProductTransaction::generateUniqueTrxId();
+
+            // Langkah 5: Menyimpan ke database
+            $newTransaction = $this->orderRepository->createTransaction($dataToSave);
+            $productTransactionId = $newTransaction->id;
+
+            // Langkah 6: Menghapus session setelah semua berhasil
+            $this ->orderRepository->clearSession();
+        });
+
+        // Langkah 7: Mengembalikan ID transaksi jika sukses
+        return $productTransactionId;
+
+    } catch (\Exception $e) {
+        // PENTING: JIKA MASIH GAGAL, KODE INI AKAN DIJALANKAN
+        // Ini akan menghentikan redirect dan menunjukkan apa yang sebenarnya salah.
+
+        // Baris di bawah ini tidak akan dijalankan jika dd() aktif, tapi ini untuk produksi nanti
+        // Log::error('Payment confirmation failed: ' . $e->getMessage());
+        return null;
+    }
+}
 }

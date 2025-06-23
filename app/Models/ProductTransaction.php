@@ -12,22 +12,25 @@ class ProductTransaction extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'phone',
-        'email',
-        'booking_trx_id',
-        'city',
-        'post_code',
-        'address',
-        'quantity',
-        'sub_total_amount',
-        'grand_total_amount',
-        'discount_amount',
-        'is_paid',
-        'shoe_id',
-        'shoe_size',
-        'promo_code_id',
-        'proof',
+    'name',
+    'phone',
+    'email',
+    'booking_trx_id',
+    'city',
+    'post_code',
+    'address',
+    'quantity',
+    'sub_total_amount',
+    'grand_total_amount',
+    'discount_amount',
+    'is_paid',
+    'shoe_id',
+    'shoe_size',
+    'size_id', // <--- TAMBAHKAN INI
+    'promo_code_id',
+    'promo_code', // <--- TAMBAHKAN JIKA ADA DI DB
+    'proof',
+    'total_discount_amount', // <--- TAMBAHKAN JIKA PERLU & ADA DI DB
     ];
 
     public static function generateUniqueTrxId()
@@ -43,6 +46,11 @@ class ProductTransaction extends Model
     public function shoe(): BelongsTo
     {
         return $this->belongsTo(Shoe::class, 'shoe_id');
+    }
+
+       public function shoeSize(): BelongsTo
+    {
+        return $this->belongsTo(ShoeSize::class, 'shoe_id');
     }
 
     public function promoCode(): BelongsTo

@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\ProductTransaction;
 use App\Repositories\Contracts\OrderRepositoryInterface;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
 
 class OrderRepository implements OrderRepositoryInterface
 {
@@ -14,9 +15,15 @@ class OrderRepository implements OrderRepositoryInterface
      * @param array $data The data for the new transaction.
      * @return \App\Models\ProductTransaction The created transaction model instance.
      */
-    public function createTransaction(array $data)
+        public function createTransaction(array $data)
     {
-        return ProductTransaction::create($data);
+        // Menggunakan Query Builder langsung untuk mem-bypass Eloquent sepenuhnya.
+        // Ini akan memasukkan data apa adanya, selama nama key cocok dengan nama kolom.
+        $id = DB::table('product_transactions')->insertGetId($data);
+
+        // Mengembalikan instance Model yang baru dibuat agar kode di Controller
+        // tetap berjalan seperti biasa.
+        return ProductTransaction::find($id);
     }
 
     /**
@@ -29,7 +36,7 @@ class OrderRepository implements OrderRepositoryInterface
     public function findByTrxIdAndPhoneNumber($bookingTrxId, $phoneNumber)
     {
         return ProductTransaction::where('booking_trx_id', $bookingTrxId)
-                    ->where('phone_number', $phoneNumber)
+                    ->where('phone', $phoneNumber)
                     ->first();
     }
 
@@ -67,4 +74,10 @@ class OrderRepository implements OrderRepositoryInterface
         $orderData = array_merge($orderData, $data); // Merge new data into existing
         session(['orderData' => $orderData]); // Save the merged data back
     }
+
+    public function clearSession()
+    {
+        Session::forget('orderData');
+    }
+
 }
