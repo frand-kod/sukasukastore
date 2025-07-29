@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Filament\Resources;
-
+use Filament\Forms\Components\Textarea;
 use App\Filament\Resources\ShoeResource\Pages;
 use App\Filament\Resources\ShoeResource\RelationManagers;
 use App\Models\Shoe;
@@ -60,7 +60,7 @@ class ShoeResource extends Resource
                 Fieldset::make('Additional')
                 ->schema([
                     // ...
-                            Forms\Components\TextArea::make('about')
+                            Textarea::make('about')
                                 ->required(),
 
                             Forms\Components\Select::make('is_popular')

@@ -1,0 +1,21 @@
+               List of relations
+ Schema |         Name          | Type  | Owner 
+--------+-----------------------+-------+-------
+ public | brands                | table | fataa
+ public | cache                 | table | fataa
+ public | cache_locks           | table | fataa
+ public | categories            | table | fataa
+ public | failed_jobs           | table | fataa
+ public | job_batches           | table | fataa
+ public | jobs                  | table | fataa
+ public | migrations            | table | fataa
+ public | password_reset_tokens | table | fataa
+ public | product_transactions  | table | fataa
+ public | promo_codes           | table | fataa
+ public | sessions              | table | fataa
+ public | shoe_photos           | table | fataa
+ public | shoe_sizes            | table | fataa
+ public | shoes                 | table | fataa
+ public | users                 | table | fataa
+(16 rows)
+
